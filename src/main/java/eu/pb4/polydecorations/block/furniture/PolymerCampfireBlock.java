@@ -10,8 +10,14 @@ import eu.pb4.polymer.virtualentity.api.attachment.BlockAwareAttachment;
 import eu.pb4.polymer.virtualentity.api.attachment.HolderAttachment;
 import eu.pb4.polymer.virtualentity.api.elements.ItemDisplayElement;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Brightness;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
@@ -43,7 +49,13 @@ public class PolymerCampfireBlock extends CampfireBlock implements FactoryBlock,
         return new Model(initialBlockState);
     }
 
+    @Override
+    public boolean tickElementHolder(ServerLevel world, BlockPos pos, BlockState initialBlockState) {
+        return true;
+    }
+
     public static final class Model extends BlockModel {
+        private final RandomSource randomSource = RandomSource.create();
         private final ItemDisplayElement main;
 
         private static final ItemStack MODEL = ItemDisplayElementUtil.getSolidModel(id("block/copper_campfire"));
@@ -66,6 +78,46 @@ public class PolymerCampfireBlock extends CampfireBlock implements FactoryBlock,
                 this.main.setYaw(state.getValue(FACING).toYRot() + 180);
 
                 this.tick();
+            }
+        }
+        @Override
+        protected void onTick() {
+            var state = this.blockState();
+            var blockPos = this.blockPos();
+
+            if (state.getValue(CampfireBlock.LIT)) {
+                if (randomSource.nextFloat() < 0.11F) {
+                    var smoke = state.getValue(CampfireBlock.SIGNAL_FIRE) ? ParticleTypes.CAMPFIRE_SIGNAL_SMOKE : ParticleTypes.CAMPFIRE_COSY_SMOKE;
+
+                    for(int i = 0; i < randomSource.nextInt(2) + 2; ++i) {
+                        addParticle(smoke, true, (double)blockPos.getX() + (double)0.5F + randomSource.nextDouble() / (double)3.0F * (double)(randomSource.nextBoolean() ? 1 : -1), (double)blockPos.getY() + randomSource.nextDouble() + randomSource.nextDouble(), (double)blockPos.getZ() + (double)0.5F + randomSource.nextDouble() / (double)3.0F * (double)(randomSource.nextBoolean() ? 1 : -1), (double)0.0F, 0.07, (double)0.0F);
+                    }
+                }
+                if (randomSource.nextInt(64) == 0) {
+                    if (randomSource.nextInt(10) == 0) {
+                        playLocalSound((double) blockPos.getX() + (double) 0.5F, (double) blockPos.getY() + (double) 0.5F, (double) blockPos.getZ() + (double) 0.5F, SoundEvents.CAMPFIRE_CRACKLE, SoundSource.BLOCKS, 0.5F + randomSource.nextFloat(), randomSource.nextFloat() * 0.7F + 0.6F, false);
+                    }
+
+                    if (randomSource.nextInt(5) == 0) {
+                        for (int i = 0; i < randomSource.nextInt(1) + 1; ++i) {
+                            addParticle(ParticleTypes.LAVA, false, (double) blockPos.getX() + (double) 0.5F, (double) blockPos.getY() + (double) 0.5F, (double) blockPos.getZ() + (double) 0.5F, (double) (randomSource.nextFloat() / 2.0F), 5.0E-5, (double) (randomSource.nextFloat() / 2.0F));
+                        }
+                    }
+                }
+            }
+
+            super.onTick();
+        }
+
+        private void addParticle(ParticleOptions type, boolean alwaysVisible, double x, double y, double z, double dx, double dy, double dz) {
+            if (this.getAttachment() != null) {
+                this.getAttachment().getWorld().sendParticles(type, false, alwaysVisible, x, y, z, 0, dx, dy, dz, 1);
+            }
+        }
+
+        private void playLocalSound(double x, double y, double z, SoundEvent soundEvent, SoundSource soundSource, float volume, float pitch, boolean force) {
+            if (this.getAttachment() != null) {
+                this.getAttachment().getWorld().playSound(null, x, y, z, soundEvent, soundSource, volume, pitch);
             }
         }
     }

@@ -330,8 +330,8 @@ public class RecipesProvider extends FabricRecipeProvider {
                 });
 
                 getValues(DecorationsItems.SHELF, woodTypes, ((woodType, item) -> {
-                    var slab = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_slab"));
-                    var planks = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_planks"));
+                    var slab = BuiltInRegistries.ITEM.getValue(WoodUtil.getSlabId(woodType));
+                    var planks = BuiltInRegistries.ITEM.getValue(WoodUtil.getPlanksId(woodType));
                     if (slab == Items.AIR) {
                         return;
                     }
@@ -345,8 +345,8 @@ public class RecipesProvider extends FabricRecipeProvider {
                 }));
 
                 getValues(DecorationsItems.BENCH, woodTypes, ((woodType, item) -> {
-                    var slab = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_slab"));
-                    var planks = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_planks"));
+                    var slab = BuiltInRegistries.ITEM.getValue(WoodUtil.getSlabId(woodType));
+                    var planks = BuiltInRegistries.ITEM.getValue(WoodUtil.getPlanksId(woodType));
                     if (slab == Items.AIR) {
                         return;
                     }
@@ -361,8 +361,8 @@ public class RecipesProvider extends FabricRecipeProvider {
                 }));
 
                 getValues(DecorationsItems.TABLE, woodTypes, ((woodType, item) -> {
-                    var slab = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_slab"));
-                    var planks = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_planks"));
+                    var slab = BuiltInRegistries.ITEM.getValue(WoodUtil.getSlabId(woodType));
+                    var planks = BuiltInRegistries.ITEM.getValue(WoodUtil.getPlanksId(woodType));
                     if (slab == Items.AIR) {
                         return;
                     }
@@ -378,8 +378,8 @@ public class RecipesProvider extends FabricRecipeProvider {
                 }));
 
                 DecorationsItems.TOOL_RACK.forEach(((woodType, item) -> {
-                    var slab = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_slab"));
-                    var planks = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_planks"));
+                    var slab = BuiltInRegistries.ITEM.getValue(WoodUtil.getSlabId(woodType));
+                    var planks = BuiltInRegistries.ITEM.getValue(WoodUtil.getPlanksId(woodType));
                     if (slab == Items.AIR) {
                         return;
                     }
@@ -396,9 +396,9 @@ public class RecipesProvider extends FabricRecipeProvider {
                 }));
 
                 DecorationsItems.WOODEN_MAILBOX.forEach(((woodType, item) -> {
-                    var log = BuiltInRegistries.ITEM.getValue(WoodUtil.getLogName(woodType));
-                    var slab = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_slab"));
-                    var planks = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_planks"));
+                    var log = BuiltInRegistries.ITEM.getValue(WoodUtil.getLogId(woodType));
+                    var slab = BuiltInRegistries.ITEM.getValue(WoodUtil.getSlabId(woodType));
+                    var planks = BuiltInRegistries.ITEM.getValue(WoodUtil.getPlanksId(woodType));
                     if (slab == Items.AIR) {
                         return;
                     }
@@ -415,7 +415,7 @@ public class RecipesProvider extends FabricRecipeProvider {
                 }));
 
                 getValues(DecorationsItems.STUMP, woodTypes, ((woodType, item) -> {
-                    var log = BuiltInRegistries.ITEM.getValue(WoodUtil.getLogName(woodType));
+                    var log = BuiltInRegistries.ITEM.getValue(WoodUtil.getLogId(woodType));
                     if (log == Items.AIR) {
                         return;
                     }
@@ -429,7 +429,7 @@ public class RecipesProvider extends FabricRecipeProvider {
                 }));
 
                 DecorationsItems.STRIPPED_STUMP.forEach(((woodType, item) -> {
-                    var log = BuiltInRegistries.ITEM.getValue(WoodUtil.getLogName(woodType).withPrefix("stripped_"));
+                    var log = BuiltInRegistries.ITEM.getValue(WoodUtil.getLogId(woodType).withPrefix("stripped_"));
                     if (log == Items.AIR) {
                         return;
                     }
@@ -443,7 +443,7 @@ public class RecipesProvider extends FabricRecipeProvider {
                 }));
 
                 DecorationsItems.SIGN_POST.forEach(((woodType, item) -> {
-                    var planks = BuiltInRegistries.ITEM.getValue(Identifier.parse(woodType.name() + "_planks"));
+                    var planks = BuiltInRegistries.ITEM.getValue(WoodUtil.getPlanksId(woodType));
                     if (planks == null) {
                         return;
                     }

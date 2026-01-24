@@ -41,7 +41,6 @@ import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.storage.loot.LootTable;
 import org.apache.commons.lang3.function.TriFunction;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -115,7 +114,7 @@ public class DecorationsBlocks {
             settings -> new GhostLightBlock(settings.lightLevel(x -> 9), 5, 1, 0.001f, ParticleTypes.COPPER_FIRE_FLAME));
 
     public static final Map<WoodType, PlainShelfBlock> SHELF = registerWood("shelf", (x, id, settings) -> {
-        var planks = Identifier.parse(x.name() + "_planks");
+        var planks = WoodUtil.getPlanksId(x);
         if (BuiltInRegistries.BLOCK.containsKey(planks)) {
             return new PlainShelfBlock(
                     BlockBehaviour.Properties.ofFullCopy(BuiltInRegistries.BLOCK.getValue(planks)).setId(ResourceKey.create(Registries.BLOCK, id)).noOcclusion()
@@ -127,7 +126,7 @@ public class DecorationsBlocks {
     });
 
     public static final Map<WoodType, BenchBlock> BENCH = registerWood("bench", (x, id, settings) -> {
-        var planks = Identifier.parse(x.name() + "_planks");
+        var planks = WoodUtil.getPlanksId(x);
         if (BuiltInRegistries.BLOCK.containsKey(planks)) {
             return new BenchBlock(
                     BlockBehaviour.Properties.ofFullCopy(BuiltInRegistries.BLOCK.getValue(planks)).setId(ResourceKey.create(Registries.BLOCK, id)).noOcclusion()
@@ -141,7 +140,7 @@ public class DecorationsBlocks {
     });
 
     public static final Map<WoodType, ToolRackBlock> TOOL_RACK = registerWood("tool_rack", (x, id, settings) -> {
-        var planks = Identifier.parse(x.name() + "_planks");
+        var planks = WoodUtil.getPlanksId(x);
         if (BuiltInRegistries.BLOCK.containsKey(planks)) {
             return new ToolRackBlock(
                     BlockBehaviour.Properties.ofFullCopy(BuiltInRegistries.BLOCK.getValue(planks)).setId(ResourceKey.create(Registries.BLOCK, id)).noOcclusion()
@@ -154,7 +153,7 @@ public class DecorationsBlocks {
     });
 
     public static final Map<WoodType, TableBlock> TABLE = registerWood("table", (x, id, settings) -> {
-        var planks = Identifier.parse(x.name() + "_planks");
+        var planks = WoodUtil.getPlanksId(x);
         if (BuiltInRegistries.BLOCK.containsKey(planks)) {
             return new TableBlock(id,
                     BlockBehaviour.Properties.ofFullCopy(BuiltInRegistries.BLOCK.getValue(planks)).setId(ResourceKey.create(Registries.BLOCK, id)).noOcclusion()
@@ -167,9 +166,9 @@ public class DecorationsBlocks {
     });
 
     public static final Map<WoodType, StumpBlock> STUMP = registerWood("stump", (x, id, settings) -> {
-        var log = WoodUtil.getLogName(x);
+        var log = WoodUtil.getLogId(x);
 
-        if (BuiltInRegistries.BLOCK.containsKey(log)) {
+        if (WoodUtil.hasLog(x) && BuiltInRegistries.BLOCK.containsKey(log)) {
             var logBlock = BuiltInRegistries.BLOCK.getValue(log);
 
             return new StumpBlock(
@@ -183,9 +182,9 @@ public class DecorationsBlocks {
     });
 
     public static final Map<WoodType, StumpBlock> STRIPPED_STUMP = registerWood("stripped_", "stump", (x, id, settings) -> {
-        var log = WoodUtil.getLogName(x).withPrefix("stripped_");
+        var log = WoodUtil.getStrippedLogId(x);
 
-        if (BuiltInRegistries.BLOCK.containsKey(log)) {
+        if (!log.equals(WoodUtil.getLogId(x)) && WoodUtil.hasLog(x) && BuiltInRegistries.BLOCK.containsKey(log)) {
             var logBlock = BuiltInRegistries.BLOCK.getValue(log);
 
             var b = new StumpBlock(
@@ -201,7 +200,7 @@ public class DecorationsBlocks {
     });
 
     public static final Map<WoodType, AttachedSignPostBlock> WOOD_SIGN_POST = registerWood("sign_post", (x, id, settings) -> {
-        var planks = Identifier.parse(x.name() + "_fence");
+        var planks = WoodUtil.getFenceId(x);
         var block = BuiltInRegistries.BLOCK.getValue(planks);
         if (block instanceof FenceBlock) {
             return new AttachedSignPostBlock(BlockBehaviour.Properties.ofFullCopy(block).setId(ResourceKey.create(Registries.BLOCK, id)), block, 4);
@@ -239,7 +238,7 @@ public class DecorationsBlocks {
             (settings, block) -> new AttachedSignPostBlock(settings, block, 4));
 
     public static final Map<WoodType, MailboxBlock> WOODEN_MAILBOX = registerWood("mailbox", (x, id, settings) -> {
-        var planks = Identifier.parse(x.name() + "_planks");
+        var planks = WoodUtil.getPlanksId(x);
         if (BuiltInRegistries.BLOCK.containsKey(planks)) {
             var block = BuiltInRegistries.BLOCK.getValue(planks);
             return new MailboxBlock(BlockBehaviour.Properties.ofFullCopy(block).setId(ResourceKey.create(Registries.BLOCK, id)), block);
@@ -319,7 +318,6 @@ public class DecorationsBlocks {
         return register(path, BlockBehaviour.Properties.ofFullCopy(copyFrom), (settings) -> function.apply(settings, copyFrom));
     }
 
-    @NotNull
     public static <T extends Block> T register(String path, BlockBehaviour.Properties settings, Function<BlockBehaviour.Properties, T> function) {
         var id = Identifier.fromNamespaceAndPath(ModInit.ID, path);
         var item = function.apply(settings.setId(ResourceKey.create(Registries.BLOCK, id)));

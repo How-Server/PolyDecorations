@@ -1,3 +1,4 @@
-- Add dynamic and automatic compatibility with wood types added by other mods.
-  - This feature assumes modders do things the same way as Mojang in terms of naming, as otherwise it might not work correctly.
-- Fixed block outline allowing to see through a block for most PolyDecorations blocks.
+- Made auto-compat bit more lenient:
+  - It will now substitute missing stripped logs with logs and missing logs with planks.
+- Fixed crash with Pyrite.
+- Fixed Copper Campfire not generating smoke.

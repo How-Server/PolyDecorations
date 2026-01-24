@@ -44,6 +44,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static eu.pb4.polydecorations.ModInit.id;
 import static eu.pb4.polydecorations.util.DecorationsUtil.getValues;
@@ -64,9 +65,9 @@ public class CustomAssetProvider implements DataProvider {
               "textures": {
                 "front": "|FRONT|",
                 "stripped_log": "|STRIPPED_LOG|",
-                "stripped_log_top": "|STRIPPED_LOG|_top",
+                "stripped_log_top": "|STRIPPED_LOG_TOP|",
                 "log": "|LOG|",
-                "log_top": "|LOG|_top"
+                "log_top": "|LOG_TOP|"
               }
             }
             """;
@@ -134,22 +135,22 @@ public class CustomAssetProvider implements DataProvider {
         getValues(DecorationsItems.SHELF, types, (type, item) -> {
             writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_shelf.json", BASE_WOOD_MODEL_JSON
                     .replace("|TYPE|", "shelf")
-                    .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                    .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                    .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                    .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                     .getBytes(StandardCharsets.UTF_8)
             );
 
             writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_shelf_top.json", BASE_WOOD_MODEL_JSON
                     .replace("|TYPE|", "shelf_top")
-                    .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                    .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                    .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                    .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                     .getBytes(StandardCharsets.UTF_8)
             );
 
             writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_shelf_double.json", BASE_WOOD_MODEL_JSON
                     .replace("|TYPE|", "shelf_double")
-                    .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                    .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                    .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                    .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                     .getBytes(StandardCharsets.UTF_8)
             );
 
@@ -162,7 +163,7 @@ public class CustomAssetProvider implements DataProvider {
             writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_stump.json", BASE_STUMP_MODEL_JSON
                     .replace("|TYPE|", "stump")
                     .replace("|TOP|", "polydecorations:block/" + WoodUtil.asPath(type) + "_" + WoodUtil.getLogSuffix(type) + "_stump_top")
-                    .replace("|SIDE|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                    .replace("|SIDE|", WoodUtil.getLogTexture(type).toString())
                     .getBytes(StandardCharsets.UTF_8)
             );
 
@@ -175,7 +176,7 @@ public class CustomAssetProvider implements DataProvider {
             writer.accept("assets/polydecorations/models/block/stripped_" + type.name().replace(':', '/') + "_stump.json", BASE_STUMP_MODEL_JSON
                     .replace("|TYPE|", "stump")
                     .replace("|TOP|", "polydecorations:block/stripped_" + WoodUtil.asPath(type) + "_" + WoodUtil.getLogSuffix(type) + "_stump_top")
-                    .replace("|SIDE|", WoodUtil.getLogName(type).withPrefix("block/stripped_").toString())
+                    .replace("|SIDE|", WoodUtil.getStrippedLogTexture(type).toString())
                     .getBytes(StandardCharsets.UTF_8)
             );
 
@@ -196,16 +197,16 @@ public class CustomAssetProvider implements DataProvider {
         getValues(DecorationsItems.TABLE, types, (type, block) -> {
             writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_table" + ".json", BASE_WOOD_MODEL_JSON
                     .replace("|TYPE|", "table")
-                    .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                    .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                    .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                    .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                     .getBytes(StandardCharsets.UTF_8)
             );
 
             for (int i = 1; i < TableBlock.TableModel.COUNT; i++) {
                 writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_table_" + i + ".json", BASE_WOOD_MODEL_JSON
                         .replace("|TYPE|", "table_" + i)
-                        .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                        .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                        .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                        .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                         .getBytes(StandardCharsets.UTF_8)
                 );
             }
@@ -219,7 +220,7 @@ public class CustomAssetProvider implements DataProvider {
             writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_sign_post.json", BASE_WOOD_MODEL_JSON
                     .replace("|TYPE|", "sign_post")
                     .replace("|PLANKS|", "polydecorations:block/sign_post_" + type.name().replace(':', '/'))
-                    .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                    .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                     .getBytes(StandardCharsets.UTF_8)
             );
 
@@ -227,7 +228,7 @@ public class CustomAssetProvider implements DataProvider {
                     new ItemAsset(new BasicItemModel(id("block/" + type.name().replace(':', '/') + "_sign_post")), ItemAsset.Properties.DEFAULT)
                             .toJson().getBytes(StandardCharsets.UTF_8));
 
-            writeStatue(type.name().replace(':', '/'), Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString(), writer);
+            writeStatue(type.name().replace(':', '/'), WoodUtil.getPlanksTexture(type).toString(), writer);
         });
 
         getValues(DecorationsItems.WOODEN_MAILBOX, types, (type, item) -> {
@@ -235,8 +236,10 @@ public class CustomAssetProvider implements DataProvider {
                     (type != WoodType.BAMBOO ? MAILBOX_MODEL_JSON : MAILBOX_BAMBOO_MODEL_JSON)
                             .replace("|TYPE|", "mailbox")
                             .replace("|FRONT|", "polydecorations:block/mailbox_front_" + WoodUtil.asPath(type))
-                            .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
-                            .replace("|STRIPPED_LOG|", WoodUtil.getLogName(type).withPrefix("block/stripped_").toString())
+                            .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
+                            .replace("|LOG_TOP|", WoodUtil.getLogTopTexture(type).toString())
+                            .replace("|STRIPPED_LOG|", WoodUtil.getStrippedLogTexture(type).toString())
+                            .replace("|STRIPPED_LOG_TOP|", WoodUtil.getStrippedLogTopTexture(type).toString())
                             .getBytes(StandardCharsets.UTF_8)
             );
 
@@ -249,8 +252,8 @@ public class CustomAssetProvider implements DataProvider {
             writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_tool_rack.json",
                     BASE_WOOD_MODEL_JSON
                             .replace("|TYPE|", "tool_rack")
-                            .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                            .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                            .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                            .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                             .getBytes(StandardCharsets.UTF_8)
             );
 
@@ -294,9 +297,7 @@ public class CustomAssetProvider implements DataProvider {
 
             for (var wood : types) {
                 try {
-                    var id = Identifier.parse(wood.name());
-
-                    var input = ImageIO.read(fileReader.apply("assets/" + id.getNamespace() + "/textures/block/" + id.getPath() + "_planks.png"));
+                    var input = ImageIO.read(fileReader.apply(AssetPaths.texture(WoodUtil.getPlanksTexture(wood)) + ".png"));
                     for (int i = 0; i < positions.size(); i++) {
                         var pos = positions.get(i);
                         palette.setRGB(i, 0, input.getRGB(pos[0], pos[1]));
@@ -312,11 +313,13 @@ public class CustomAssetProvider implements DataProvider {
         }
 
         // Stump top
-        for (var prefix : List.of("", "stripped_")) {
+        for (var pair : List.<Map.Entry<String, Function<WoodType, Identifier>>>of(Map.entry("", WoodUtil::getLogTopTexture), Map.entry("stripped_", WoodUtil::getStrippedLogTopTexture))) {
             for (var wood : types) {
+                var prefix = pair.getKey();
+                var texId = pair.getValue();
                 try {
                     var id = Identifier.parse(wood.name());
-                    var source = ImageIO.read(fileReader.apply("assets/" + id.getNamespace() + "/textures/block/" + prefix + WoodUtil.getLogName(wood).getPath() + "_top.png"));
+                    var source = ImageIO.read(fileReader.apply(AssetPaths.texture(texId.apply(wood)) + ".png"));
                     var texture = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_RGB);
                     var frames = source.getHeight() / source.getWidth();
 
@@ -342,7 +345,7 @@ public class CustomAssetProvider implements DataProvider {
                     ImageIO.write(texture, "png", b);
                     assetWriter.accept("assets/polydecorations/textures/block/" + prefix + WoodUtil.asPath(wood) + "_" + WoodUtil.getLogSuffix(wood) + "_stump_top.png", b.toByteArray());
 
-                    var mcMeta = jar.resolve("assets/" + id.getNamespace() + "/textures/block/" + prefix + WoodUtil.getLogName(wood).getPath() + "_top.png.mcmeta");
+                    var mcMeta = jar.resolve(AssetPaths.texture(texId.apply(wood)) + ".png.mcmeta");
                     if (Files.exists(mcMeta)) {
                         assetWriter.accept("assets/polydecorations/textures/block/" + prefix + WoodUtil.asPath(wood) + "_" + WoodUtil.getLogSuffix(wood) + "_stump_top.png.mcmeta",
                                 Files.readAllBytes(mcMeta));
@@ -363,26 +366,26 @@ public class CustomAssetProvider implements DataProvider {
     private static void writeBenchSet(WoodType type, String suffix, BiConsumer<String, byte[]> writer) {
         writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_bench" + suffix + ".json", BASE_WOOD_MODEL_JSON
                 .replace("|TYPE|", "bench" + suffix)
-                .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                 .getBytes(StandardCharsets.UTF_8)
         );
         writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_bench" + suffix + "_left.json", BASE_WOOD_MODEL_JSON
                 .replace("|TYPE|", "bench" + suffix + "_left")
-                .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                 .getBytes(StandardCharsets.UTF_8)
         );
         writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_bench" + suffix + "_right.json", BASE_WOOD_MODEL_JSON
                 .replace("|TYPE|", "bench" + suffix + "_right")
-                .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                 .getBytes(StandardCharsets.UTF_8)
         );
         writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_bench" + suffix + "_middle.json", BASE_WOOD_MODEL_JSON
                 .replace("|TYPE|", "bench" + suffix + "_middle")
-                .replace("|PLANKS|", Identifier.parse(type.name()).withPrefix("block/").withSuffix("_planks").toString())
-                .replace("|LOG|", WoodUtil.getLogName(type).withPrefix("block/").toString())
+                .replace("|PLANKS|", WoodUtil.getPlanksTexture(type).toString())
+                .replace("|LOG|", WoodUtil.getLogTexture(type).toString())
                 .getBytes(StandardCharsets.UTF_8)
         );
     }

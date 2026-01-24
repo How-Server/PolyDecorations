@@ -95,7 +95,9 @@ public class DecorationsUtil {
     public static  <X, Y> void getValues(Map<X, Y> map, List<X> keys, BiConsumer<X, Y> consumer) {
         for (var key : keys) {
             var val = map.get(key);
-            consumer.accept(key, val);
+            if (val != null) {
+                consumer.accept(key, val);
+            }
         }
     }
 }
