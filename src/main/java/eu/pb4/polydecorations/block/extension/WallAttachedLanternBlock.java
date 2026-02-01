@@ -3,6 +3,7 @@ package eu.pb4.polydecorations.block.extension;
 import eu.pb4.factorytools.api.block.QuickWaterloggable;
 import eu.pb4.factorytools.api.virtualentity.BlockModel;
 import eu.pb4.factorytools.api.virtualentity.ItemDisplayElementUtil;
+import eu.pb4.polydecorations.block.DecorationsBlockTags;
 import eu.pb4.polymer.core.api.block.PolymerBlock;
 import eu.pb4.polymer.virtualentity.api.BlockWithElementHolder;
 import eu.pb4.polymer.virtualentity.api.ElementHolder;
@@ -17,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
@@ -38,8 +40,10 @@ import net.minecraft.world.phys.shapes.Shapes;
 import org.jetbrains.annotations.Nullable;
 import xyz.nucleoid.packettweaker.PacketContext;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static eu.pb4.polydecorations.ModInit.id;
 
@@ -80,20 +84,24 @@ public class WallAttachedLanternBlock extends Block implements PolymerBlock, Blo
     public static boolean canSupport(Attached attached, LevelReader worldAccess, Direction direction, BlockPos neighborPos, BlockState state) {
         return getSupportType(worldAccess, direction, neighborPos, state) == attached;
     }
+
     @Nullable
     public static Attached getSupportType(LevelReader worldAccess, Direction direction, BlockPos neighborPos, BlockState state) {
-        var colShape = state.getCollisionShape(worldAccess, neighborPos);
-        if (!Shapes.joinIsNotEmpty(Shapes.block(), colShape.getFaceShape(direction), BooleanOp.NOT_SAME)) {
-            return Attached.BLOCK;
+        var colShape = state.is(DecorationsBlockTags.USE_BASE_SHAPE_OVER_SUPPORT_SHAPE)
+                ? state.getShape(worldAccess, neighborPos) : state.getBlockSupportShape(worldAccess, neighborPos);
+
+        var optPoint = colShape.move(-0.5, -0.5, -0.5).closestPointTo(direction.getUnitVec3());
+        if (optPoint.isEmpty() ) {
+            return null;
         }
-        if (state.is(BlockTags.WALLS)) {
-            return Attached.WALL;
-        }
-        if (state.is(BlockTags.FENCES)) {
-            return Attached.FENCE;
+        var point = optPoint.get();
+
+        if (Math.abs(point.x) + Math.abs(point.y) + Math.abs(point.z) != Math.abs(point.get(direction.getAxis()))) {
+            return null;
         }
 
-        return null;
+        var val = (int) (8 - (direction.getAxisDirection().getStep() * point.get(direction.getAxis())) * 16);
+        return val >= 0 && val < Attached.values().length ? Attached.values()[val] : null;
     }
 
     @Override
@@ -120,23 +128,20 @@ public class WallAttachedLanternBlock extends Block implements PolymerBlock, Blo
     }
 
     public static final class Model extends BlockModel {
-        public static final ItemStack MODEL = ItemDisplayElementUtil.getSolidModel(id("block/lantern_support"));
-        public static final ItemStack MODEL_WALL = ItemDisplayElementUtil.getSolidModel(id("block/lantern_support_wall"));
-        public static final ItemStack MODEL_FENCE = ItemDisplayElementUtil.getSolidModel(id("block/lantern_support_fence"));
+        public static final ItemStack MODEL[] = Arrays.stream(Attached.values())
+                .map(x -> ItemDisplayElementUtil.getSolidModel(id("block/lantern_support/" + x.ordinal())))
+                .toArray(ItemStack[]::new);
         private final ItemDisplayElement main;
 
         private Model(BlockState state) {
             this.main = ItemDisplayElementUtil.createSimple(model(state));
             this.main.setYaw(state.getValue(FACING).getOpposite().toYRot());
+            this.main.setViewRange(4);
             this.addElement(main);
         }
 
         private ItemStack model(BlockState state) {
-            return switch (state.getValue(ATTACHED)) {
-                case BLOCK -> MODEL;
-                case WALL -> MODEL_WALL;
-                case FENCE -> MODEL_FENCE;
-            };
+            return MODEL[state.getValue(ATTACHED).ordinal()];
         }
 
         @Override
@@ -152,8 +157,12 @@ public class WallAttachedLanternBlock extends Block implements PolymerBlock, Blo
 
     public enum Attached implements StringRepresentable {
         BLOCK,
-        FENCE,
-        WALL;
+        PIXEL_1,
+        PIXEL_2,
+        WALL,
+        PIXEL_4,
+        PIXEL_5,
+        FENCE;
 
         @Override
         public String getSerializedName() {

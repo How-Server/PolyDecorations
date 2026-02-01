@@ -1,4 +1,5 @@
-- Made auto-compat bit more lenient:
-  - It will now substitute missing stripped logs with logs and missing logs with planks.
-- Fixed crash with Pyrite.
-- Fixed Copper Campfire not generating smoke.
+- Lanterns can now be placed against more blocks.
+  - It can be placed against any block that has a side positioned between 0 (aka full block) and 6 (aka fence) pixels from block's edge.
+- Improved Stumps:
+  - Stumps can now be placed directionally.
+  - If you place a block in front of Stump's facing direction it will now take full block height.

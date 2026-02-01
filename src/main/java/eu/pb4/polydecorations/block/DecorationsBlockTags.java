@@ -18,6 +18,7 @@ public class DecorationsBlockTags {
     public static final TagKey<Block> STUMPS = of("stumps");
     public static final TagKey<Block> SLEEPING_BAGS = of("stumps");
     public static final TagKey<Block> ALLOWED_INTERACTIONS_BLOCKS = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("goml", "allowed_interactions"));
+    public static final TagKey<Block> USE_BASE_SHAPE_OVER_SUPPORT_SHAPE = of("use_base_shape_over_support_shape");
 
     private static TagKey<Block> of(String path) {
         return TagKey.create(Registries.BLOCK, ModInit.id(path));

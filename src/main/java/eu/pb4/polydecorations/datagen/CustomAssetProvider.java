@@ -167,6 +167,13 @@ public class CustomAssetProvider implements DataProvider {
                     .getBytes(StandardCharsets.UTF_8)
             );
 
+            writer.accept("assets/polydecorations/models/block/" + type.name().replace(':', '/') + "_stump_tall.json", BASE_STUMP_MODEL_JSON
+                    .replace("|TYPE|", "stump_tall")
+                    .replace("|TOP|", "polydecorations:block/" + WoodUtil.asPath(type) + "_" + WoodUtil.getLogSuffix(type) + "_stump_top")
+                    .replace("|SIDE|", WoodUtil.getLogTexture(type).toString())
+                    .getBytes(StandardCharsets.UTF_8)
+            );
+
             writer.accept(AssetPaths.itemAsset(id(type.name().replace(':', '/') + "_stump")),
                     new ItemAsset(new BasicItemModel(id("block/" + type.name().replace(':', '/') + "_stump")), ItemAsset.Properties.DEFAULT)
                             .toJson().getBytes(StandardCharsets.UTF_8));
@@ -175,6 +182,13 @@ public class CustomAssetProvider implements DataProvider {
         getValues(DecorationsItems.STRIPPED_STUMP, types, (type, item) -> {
             writer.accept("assets/polydecorations/models/block/stripped_" + type.name().replace(':', '/') + "_stump.json", BASE_STUMP_MODEL_JSON
                     .replace("|TYPE|", "stump")
+                    .replace("|TOP|", "polydecorations:block/stripped_" + WoodUtil.asPath(type) + "_" + WoodUtil.getLogSuffix(type) + "_stump_top")
+                    .replace("|SIDE|", WoodUtil.getStrippedLogTexture(type).toString())
+                    .getBytes(StandardCharsets.UTF_8)
+            );
+
+            writer.accept("assets/polydecorations/models/block/stripped_" + type.name().replace(':', '/') + "_stump_tall.json", BASE_STUMP_MODEL_JSON
+                    .replace("|TYPE|", "stump_tall")
                     .replace("|TOP|", "polydecorations:block/stripped_" + WoodUtil.asPath(type) + "_" + WoodUtil.getLogSuffix(type) + "_stump_top")
                     .replace("|SIDE|", WoodUtil.getStrippedLogTexture(type).toString())
                     .getBytes(StandardCharsets.UTF_8)

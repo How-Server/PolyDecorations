@@ -108,5 +108,8 @@ public class BlockTagsProvider extends FabricTagProvider.BlockTagProvider {
         this.valueLookupBuilder(DecorationsBlockTags.SLEEPING_BAGS)
                 .add(DecorationsBlocks.SLEEPING_BAG.values().toArray(Block[]::new))
         ;
+
+        this.valueLookupBuilder(DecorationsBlockTags.USE_BASE_SHAPE_OVER_SUPPORT_SHAPE)
+                .addOptionalTag(DecorationsBlockTags.STUMPS);
     }
 }
