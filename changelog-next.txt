@@ -3,3 +3,5 @@
 - Improved Stumps:
   - Stumps can now be placed directionally.
   - If you place a block in front of Stump's facing direction it will now take full block height.
+- You can now connect fences directly with Leads.
+  - No extra hidden mob required!

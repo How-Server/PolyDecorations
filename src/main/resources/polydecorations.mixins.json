@@ -14,6 +14,7 @@
     "ItemContainerContentsMixin",
     "LanguageAccessor",
     "LanternBlockMixin",
+    "LeadItemMixin",
     "LivingEntityAccessor",
     "LivingEntityMixin",
     "PackRepositoryMixin",
