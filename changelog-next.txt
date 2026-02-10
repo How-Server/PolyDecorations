@@ -1,1 +1,7 @@
-Fix canvas copying recipe
+- Lanterns can now be placed against more blocks.
+  - It can be placed against any block that has a side positioned between 0 (aka full block) and 6 (aka fence) pixels from block's edge.
+- Improved Stumps:
+  - Stumps can now be placed directionally.
+  - If you place a block in front of Stump's facing direction it will now take full block height.
+- You can now connect fences directly with Leads.
+  - No extra hidden mob required!

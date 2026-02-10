@@ -4,33 +4,39 @@ import eu.pb4.polydecorations.ModInit;
 import eu.pb4.polymer.core.api.entity.PolymerEntityUtils;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
 
 public class DecorationsEntities {
-    public static final EntityType<CanvasEntity> CANVAS = register("canvas", FabricEntityTypeBuilder
-            .create().dimensions(EntityDimensions.changing(0.5f, 0.5f)).entityFactory(CanvasEntity::new));
+    public static final EntityType<CanvasEntity> CANVAS = register("canvas", EntityType.Builder
+            .of(CanvasEntity::new, MobCategory.MISC).sized(0.5f, 0.5f));
 
-    public static final EntityType<StatueEntity> STATUE = register("statue", FabricEntityTypeBuilder
-            .create().dimensions(EntityType.ARMOR_STAND.getDimensions()).entityFactory(StatueEntity::new));
+    public static final EntityType<StatueEntity> STATUE = register("statue", EntityType.Builder
+            .of(StatueEntity::new, MobCategory.MISC).sized(EntityType.ARMOR_STAND.getDimensions().width(), EntityType.ARMOR_STAND.getDimensions().height()));
 
-    public static final EntityType<SeatEntity> SEAT = register("seat", FabricEntityTypeBuilder
-            .create().fireImmune().dimensions(EntityDimensions.fixed(0f, 0f)).entityFactory(SeatEntity::new).disableSummon());
+    public static final EntityType<SeatEntity> SEAT = register("seat", EntityType.Builder
+            .of(SeatEntity::new, MobCategory.MISC).fireImmune().sized(0f, 0f).noSummon());
+
+    public static final EntityType<FirstLeashFenceKnotEntity> FIRST_LEASH_FENCE_KNOT = register("first_leash_fence_knot",
+             EntityType.Builder.of(FirstLeashFenceKnotEntity::new, MobCategory.MISC).noLootTable().sized(0.375F, 0.5F).eyeHeight(0.0625F).clientTrackingRange(10)
+                    .updateInterval(10));
 
     public static void register() {
         StatueEntity.Type.STONE.fireproof();
         FabricDefaultAttributeRegistry.register(STATUE, StatueEntity.createLivingAttributes());
     }
 
-    public static <T extends Entity> EntityType<T> register(String path, FabricEntityTypeBuilder<T> item) {
-        var id = Identifier.of(ModInit.ID, path);
-        var x = Registry.register(Registries.ENTITY_TYPE, id, item.build(RegistryKey.of(RegistryKeys.ENTITY_TYPE, id)));
+    public static <T extends Entity> EntityType<T> register(String path, EntityType.Builder<T> item) {
+        var id = Identifier.fromNamespaceAndPath(ModInit.ID, path);
+        var x = Registry.register(BuiltInRegistries.ENTITY_TYPE, id, item.build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
         PolymerEntityUtils.registerType(x);
         return x;
     }

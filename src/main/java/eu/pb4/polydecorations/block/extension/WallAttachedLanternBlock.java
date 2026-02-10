@@ -3,6 +3,7 @@ package eu.pb4.polydecorations.block.extension;
 import eu.pb4.factorytools.api.block.QuickWaterloggable;
 import eu.pb4.factorytools.api.virtualentity.BlockModel;
 import eu.pb4.factorytools.api.virtualentity.ItemDisplayElementUtil;
+import eu.pb4.polydecorations.block.DecorationsBlockTags;
 import eu.pb4.polymer.core.api.block.PolymerBlock;
 import eu.pb4.polymer.virtualentity.api.BlockWithElementHolder;
 import eu.pb4.polymer.virtualentity.api.ElementHolder;
@@ -10,34 +11,39 @@ import eu.pb4.polymer.virtualentity.api.attachment.BlockAwareAttachment;
 import eu.pb4.polymer.virtualentity.api.attachment.HolderAttachment;
 import eu.pb4.polymer.virtualentity.api.elements.ItemDisplayElement;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import net.minecraft.block.*;
-import net.minecraft.entity.ai.pathing.NavigationType;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.EnumProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.state.property.Property;
-import net.minecraft.text.MutableText;
-import net.minecraft.util.StringIdentifiable;
-import net.minecraft.util.function.BooleanBiFunction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.WorldAccess;
-import net.minecraft.world.WorldView;
-import net.minecraft.world.tick.ScheduledTickView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.util.Util;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
 import org.jetbrains.annotations.Nullable;
 import xyz.nucleoid.packettweaker.PacketContext;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static eu.pb4.polydecorations.ModInit.id;
 
@@ -45,96 +51,97 @@ public class WallAttachedLanternBlock extends Block implements PolymerBlock, Blo
     public static final Map<Block, WallAttachedLanternBlock> VANILLA2WALL = new Reference2ObjectOpenHashMap<>();
 
     private final LanternBlock lantern;
-    public static final BooleanProperty WATERLOGGED = Properties.WATERLOGGED;
-    public static final Property<Direction> FACING = Properties.HORIZONTAL_FACING;
-    public static final EnumProperty<Attached> ATTACHED = EnumProperty.of("attached", Attached.class);
+    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    public static final Property<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final EnumProperty<Attached> ATTACHED = EnumProperty.create("attached", Attached.class);
 
-    public WallAttachedLanternBlock(AbstractBlock.Settings settings, LanternBlock block) {
-        super(settings.nonOpaque().lootTable(block.getLootTableKey()));
+    public WallAttachedLanternBlock(BlockBehaviour.Properties settings, LanternBlock block) {
+        super(settings.noOcclusion().overrideLootTable(block.getLootTable()));
         this.lantern = block;
         VANILLA2WALL.put(block, this);
     }
 
     @Override
-    public ItemStack getPickStack(WorldView world, BlockPos pos, BlockState state, boolean includeData) {
-        return this.lantern.getDefaultState().getPickStack(world, pos, includeData);
+    public ItemStack getCloneItemStack(LevelReader world, BlockPos pos, BlockState state, boolean includeData) {
+        return this.lantern.defaultBlockState().getCloneItemStack(world, pos, includeData);
     }
 
     @Override
     public BlockState getPolymerBlockState(BlockState state, PacketContext context) {
-        return this.lantern.getDefaultState().with(LanternBlock.WATERLOGGED, state.get(WATERLOGGED));
+        return this.lantern.defaultBlockState().setValue(LanternBlock.WATERLOGGED, state.getValue(WATERLOGGED));
     }
 
     @Override
-    public MutableText getName() {
+    public MutableComponent getName() {
         return this.lantern.getName();
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(WATERLOGGED, FACING, ATTACHED);
     }
 
-    public static boolean canSupport(Attached attached, WorldView worldAccess, Direction direction, BlockPos neighborPos, BlockState state) {
+    public static boolean canSupport(Attached attached, LevelReader worldAccess, Direction direction, BlockPos neighborPos, BlockState state) {
         return getSupportType(worldAccess, direction, neighborPos, state) == attached;
     }
+
     @Nullable
-    public static Attached getSupportType(WorldView worldAccess, Direction direction, BlockPos neighborPos, BlockState state) {
-        var colShape = state.getCollisionShape(worldAccess, neighborPos);
-        if (!VoxelShapes.matchesAnywhere(VoxelShapes.fullCube(), colShape.getFace(direction), BooleanBiFunction.NOT_SAME)) {
-            return Attached.BLOCK;
+    public static Attached getSupportType(LevelReader worldAccess, Direction direction, BlockPos neighborPos, BlockState state) {
+        var colShape = state.is(DecorationsBlockTags.USE_BASE_SHAPE_OVER_SUPPORT_SHAPE)
+                ? state.getShape(worldAccess, neighborPos) : state.getBlockSupportShape(worldAccess, neighborPos);
+
+        var optPoint = colShape.move(-0.5, -0.5, -0.5).closestPointTo(direction.getUnitVec3());
+        if (optPoint.isEmpty() ) {
+            return null;
         }
-        if (state.isIn(BlockTags.WALLS)) {
-            return Attached.WALL;
-        }
-        if (state.isIn(BlockTags.FENCES)) {
-            return Attached.FENCE;
+        var point = optPoint.get();
+
+        if (Math.abs(point.x) + Math.abs(point.y) + Math.abs(point.z) != Math.abs(point.get(direction.getAxis()))) {
+            return null;
         }
 
-        return null;
+        var val = (int) (8 - (direction.getAxisDirection().getStep() * point.get(direction.getAxis())) * 16);
+        return val >= 0 && val < Attached.values().length ? Attached.values()[val] : null;
     }
 
     @Override
-    protected BlockState getStateForNeighborUpdate(BlockState state, WorldView world, ScheduledTickView tickView, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, Random random) {
+    protected BlockState updateShape(BlockState state, LevelReader world, ScheduledTickAccess tickView, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
         tickWater(state, world, tickView, pos);
-        if (direction != state.get(FACING)) {
-            return super.getStateForNeighborUpdate(state, world, tickView, pos, direction, neighborPos, neighborState, random);
+        if (direction != state.getValue(FACING)) {
+            return super.updateShape(state, world, tickView, pos, direction, neighborPos, neighborState, random);
         }
 
-        return canSupport(state.get(ATTACHED), world, direction.getOpposite(), neighborPos, neighborState) ? state : getFluidState(state).getBlockState();
+        return canSupport(state.getValue(ATTACHED), world, direction.getOpposite(), neighborPos, neighborState) ? state : getFluidState(state).createLegacyBlock();
     }
 
     public FluidState getFluidState(BlockState state) {
-        return (Boolean)state.get(WATERLOGGED) ? Fluids.WATER.getStill(false) : super.getFluidState(state);
+        return (Boolean)state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
     }
 
-    public boolean canPathfindThrough(BlockState state, BlockView world, BlockPos pos, NavigationType type) {
+    public boolean canPathfindThrough(BlockState state, BlockGetter world, BlockPos pos, PathComputationType type) {
         return false;
     }
 
     @Override
-    public @Nullable ElementHolder createElementHolder(ServerWorld world, BlockPos pos, BlockState initialBlockState) {
+    public @Nullable ElementHolder createElementHolder(ServerLevel world, BlockPos pos, BlockState initialBlockState) {
         return new Model(initialBlockState);
     }
 
     public static final class Model extends BlockModel {
-        public static final ItemStack MODEL = ItemDisplayElementUtil.getModel(id("block/lantern_support"));
-        public static final ItemStack MODEL_WALL = ItemDisplayElementUtil.getModel(id("block/lantern_support_wall"));
-        public static final ItemStack MODEL_FENCE = ItemDisplayElementUtil.getModel(id("block/lantern_support_fence"));
+        public static final ItemStack MODEL[] = Arrays.stream(Attached.values())
+                .map(x -> ItemDisplayElementUtil.getSolidModel(id("block/lantern_support/" + x.ordinal())))
+                .toArray(ItemStack[]::new);
         private final ItemDisplayElement main;
 
         private Model(BlockState state) {
             this.main = ItemDisplayElementUtil.createSimple(model(state));
-            this.main.setYaw(state.get(FACING).getOpposite().getPositiveHorizontalDegrees());
+            this.main.setYaw(state.getValue(FACING).getOpposite().toYRot());
+            this.main.setViewRange(4);
             this.addElement(main);
         }
 
         private ItemStack model(BlockState state) {
-            return switch (state.get(ATTACHED)) {
-                case BLOCK -> MODEL;
-                case WALL -> MODEL_WALL;
-                case FENCE -> MODEL_FENCE;
-            };
+            return MODEL[state.getValue(ATTACHED).ordinal()];
         }
 
         @Override
@@ -142,19 +149,23 @@ public class WallAttachedLanternBlock extends Block implements PolymerBlock, Blo
             if (updateType == BlockAwareAttachment.BLOCK_STATE_UPDATE) {
                 var state = this.blockState();
                 this.main.setItem(model(state));
-                this.main.setYaw(state.get(FACING).getOpposite().getPositiveHorizontalDegrees());
+                this.main.setYaw(state.getValue(FACING).getOpposite().toYRot());
                 this.tick();
             }
         }
     }
 
-    public enum Attached implements StringIdentifiable {
+    public enum Attached implements StringRepresentable {
         BLOCK,
-        FENCE,
-        WALL;
+        PIXEL_1,
+        PIXEL_2,
+        WALL,
+        PIXEL_4,
+        PIXEL_5,
+        FENCE;
 
         @Override
-        public String asString() {
+        public String getSerializedName() {
             return this.toString().toLowerCase(Locale.ROOT);
         }
     }
